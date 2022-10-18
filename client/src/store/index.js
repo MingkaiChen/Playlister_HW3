@@ -116,7 +116,7 @@ export const useGlobalStore = () => {
         async function asyncChangeListName(id) {
             let response = await api.getPlaylistById(id);
             if (response.data.success) {
-                let playlist = response.data.playist;
+                let playlist = response.data.playlist;
                 playlist.name = newName;
                 async function updateList(playlist) {
                     response = await api.updatePlaylistById(playlist._id, playlist);
@@ -186,7 +186,7 @@ export const useGlobalStore = () => {
         }
         asyncSetCurrentList(id);
     }
-    store.getPlaylistSize = function() {
+    store.getPlaylistSize = function () {
         return store.currentList.songs.length;
     }
     store.undo = function () {
@@ -202,6 +202,35 @@ export const useGlobalStore = () => {
             type: GlobalStoreActionType.SET_LIST_NAME_EDIT_ACTIVE,
             payload: null
         });
+    }
+
+    store.createNewList = function () {
+        async function asyncCreateNewList() {
+            let response = await api.createPlaylist({
+                name: "Untitled" + (store.newListCounter === 0 ? "" : store.newListCounter),
+                songs: []
+            });
+            store.newListCounter += 1;
+            if (response.data.success) {
+                let playlist = response.data.playlist;
+                storeReducer({
+                    type: GlobalStoreActionType.CREATE_NEW_LIST,
+                    payload: playlist
+                });
+            }
+            else {
+                console.log("API FAILED TO CREATE NEW LIST");
+            }
+        }
+        async function asyncClickEdit() {
+            let newResponse = await api.getPlaylistPairs();
+            if (newResponse.data.success) {
+                let pairsArray = newResponse.data.idNamePairs;
+                document.getElementById("edit-list-" + pairsArray[pairsArray.length - 1]._id).click();
+            }
+        }
+        asyncCreateNewList();
+        asyncClickEdit();
     }
 
     // THIS GIVES OUR STORE AND ITS REDUCER TO ANY COMPONENT THAT NEEDS IT
