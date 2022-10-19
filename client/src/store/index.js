@@ -21,6 +21,7 @@ export const GlobalStoreActionType = {
     MARK_LIST_FOR_DELETION: "MARK_LIST_FOR_DELETION",
     UNMARK_LIST_FOR_DELETION: "UNMARK_LIST_FOR_DELETION",
     DELETE_MARKED_LIST: "DELETE_MARKED_LIST",
+    CREATE_NEW_SONG: "CREATE_NEW_SONG",
 }
 
 // WE'LL NEED THIS TO PROCESS TRANSACTIONS
@@ -36,6 +37,7 @@ export const useGlobalStore = () => {
         newListCounter: 0,
         listNameActive: false,
         markListForDeletion: null,
+        markSongForEditing: null,
     });
 
     // HERE'S THE DATA STORE'S REDUCER, IT MUST
@@ -50,7 +52,8 @@ export const useGlobalStore = () => {
                     currentList: null,
                     newListCounter: store.newListCounter,
                     listNameActive: false,
-                    markListForDeletion: store.markListForDeletion,
+                    markListForDeletion: null,
+                    markSongForEditing: store.markSongForEditing,
                 });
             }
             // STOP EDITING THE CURRENT LIST
@@ -60,7 +63,8 @@ export const useGlobalStore = () => {
                     currentList: null,
                     newListCounter: store.newListCounter,
                     listNameActive: false,
-                    markListForDeletion: store.markListForDeletion,
+                    markListForDeletion: null,
+                    markSongForEditing: null,
                 })
             }
             // CREATE A NEW LIST
@@ -70,7 +74,8 @@ export const useGlobalStore = () => {
                     currentList: payload.playlist,
                     newListCounter: store.newListCounter + 1,
                     listNameActive: false,
-                    markListForDeletion: store.markListForDeletion,
+                    markListForDeletion: null,
+                    markSongForEditing: null,
                 })
             }
             // GET ALL THE LISTS SO WE CAN PRESENT THEM
@@ -80,7 +85,8 @@ export const useGlobalStore = () => {
                     currentList: null,
                     newListCounter: store.newListCounter,
                     listNameActive: false,
-                    markListForDeletion: store.markListForDeletion,
+                    markListForDeletion: null,
+                    markSongForEditing: null,
                 });
             }
             // PREPARE TO DELETE A LIST
@@ -91,6 +97,7 @@ export const useGlobalStore = () => {
                     newListCounter: store.newListCounter,
                     listNameActive: false,
                     markListForDeletion: payload,
+                    markSongForEditing: null,
                 });
             }
             // UPDATE A LIST
@@ -100,7 +107,8 @@ export const useGlobalStore = () => {
                     currentList: payload,
                     newListCounter: store.newListCounter,
                     listNameActive: false,
-                    markListForDeletion: store.markListForDeletion,
+                    markListForDeletion: null,
+                    markSongForEditing: null,
                 });
             }
             // START EDITING A LIST NAME
@@ -110,7 +118,8 @@ export const useGlobalStore = () => {
                     currentList: payload,
                     newListCounter: store.newListCounter,
                     listNameActive: true,
-                    markListForDeletion: store.markListForDeletion,
+                    markListForDeletion: null,
+                    markSongForEditing: null,
                 });
             }
             // CANCEL DELETING A LIST
@@ -121,6 +130,7 @@ export const useGlobalStore = () => {
                     newListCounter: store.newListCounter,
                     listNameActive: false,
                     markListForDeletion: null,
+                    markSongForEditing: null,
                 });
             }
             // DELETE A LIST
@@ -131,6 +141,18 @@ export const useGlobalStore = () => {
                     newListCounter: store.newListCounter,
                     listNameActive: false,
                     markListForDeletion: null,
+                    markSongForEditing: null,
+                });
+            }
+            // CREATE A NEW SONG
+            case GlobalStoreActionType.CREATE_NEW_SONG: {
+                return setStore({
+                    idNamePairs: store.idNamePairs,
+                    currentList: payload,
+                    newListCounter: store.newListCounter,
+                    listNameActive: false,
+                    markListForDeletion: null,
+                    markSongForEditing: null,
                 });
             }
             default:
@@ -167,7 +189,7 @@ export const useGlobalStore = () => {
                         getListPairs(playlist);
                     }
                 }
-                if(playlist.name !== newName) {
+                if (playlist.name !== newName) {
                     console.log(playlist.name + " " + newName);
                     playlist.name = newName;
                     updateList(playlist);
@@ -300,6 +322,29 @@ export const useGlobalStore = () => {
             type: GlobalStoreActionType.UNMARK_LIST_FOR_DELETION,
             payload: null
         });
+    }
+
+    store.createNewSong = function () {
+        async function asyncCreateNewSong() {
+            let response = await api.createSong(store.currentList._id, {
+                title: "Untitled",
+                artist: "Unknown",
+                youTubeId: "dQw4w9WgXcQ"
+            });
+            if (response.data.success) {
+                let playlist = response.data.playlist;
+                storeReducer({
+                    type: GlobalStoreActionType.CREATE_NEW_SONG,
+                    payload: playlist
+                });
+            }
+            else {
+                console.log("API FAILED TO CREATE NEW SONG");
+            }
+        }
+        if (store.currentList) {
+            asyncCreateNewSong();
+        }
     }
 
     // THIS GIVES OUR STORE AND ITS REDUCER TO ANY COMPONENT THAT NEEDS IT
