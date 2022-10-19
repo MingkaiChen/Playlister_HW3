@@ -10,19 +10,21 @@ import { store } from '../store'
  * @author Mingkai Chen
  */
 
-class AddSongTransaction extends jsTPS_Transaction {
-    constructor(store) {
+class MoveSongTransaction extends jsTPS_Transaction {
+    constructor(store, source, target) {
         super();
         this.store = store;
+        this.source = source;
+        this.target = target;
     }
 
     doTransaction() {
-        this.store.createNewSong();
+        this.store.moveSongCaller(this.source, this.target);
     }
     
     undoTransaction() {
-        this.store.deleteSongByIndex(this.store.currentList.songs.length - 1);
+        this.store.moveSongCaller(this.target, this.source);
     }
 }
 
-export default AddSongTransaction;
+export default MoveSongTransaction;

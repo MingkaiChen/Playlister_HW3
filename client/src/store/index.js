@@ -1,6 +1,7 @@
 import { createContext, useState } from 'react'
 import jsTPS from '../common/jsTPS'
 import api from '../api'
+import { AddSongTransaction, MoveSongTransaction } from '../transactions'
 export const GlobalStoreContext = createContext({});
 /*
     This is our global data store. Note that it uses the Flux design pattern,
@@ -222,6 +223,19 @@ export const useGlobalStore = () => {
                 return store;
         }
     }
+
+    store.undo = function () {
+        if (tps.hasTransactionToUndo()) {
+            tps.undoTransaction();
+        }
+    }
+
+    store.redo = function () {
+        if (tps.hasTransactionToRedo()) {
+            tps.doTransaction();
+        }
+    }
+
     // THESE ARE THE FUNCTIONS THAT WILL UPDATE OUR STORE AND
     // DRIVE THE STATE OF THE APPLICATION. WE'LL CALL THESE IN 
     // RESPONSE TO EVENTS INSIDE OUR COMPONENTS.
@@ -307,12 +321,6 @@ export const useGlobalStore = () => {
     }
     store.getPlaylistSize = function () {
         return store.currentList.songs.length;
-    }
-    store.undo = function () {
-        tps.undoTransaction();
-    }
-    store.redo = function () {
-        tps.doTransaction();
     }
 
     // THIS FUNCTION ENABLES THE PROCESS OF EDITING A LIST NAME
@@ -410,7 +418,19 @@ export const useGlobalStore = () => {
         }
     }
 
+    store.addSong = function () {
+        tps.addTransaction(new AddSongTransaction(store));
+    }
+
     store.moveSong = function (sourceID, targetID) {
+        let sourceIndex = parseInt(sourceID);
+        let targetIndex = parseInt(targetID);
+        if (sourceIndex !== targetIndex) {
+            tps.addTransaction(new MoveSongTransaction(store, sourceIndex, targetIndex));
+        }
+    }
+
+    store.moveSongCaller = function (sourceIndex, targetIndex) {
         async function asyncMoveSong() {
             let response = await api.updatePlaylistById(store.currentList._id, store.currentList);
             if (response.data.success) {
@@ -423,14 +443,10 @@ export const useGlobalStore = () => {
                 console.log("API FAILED TO MOVE SONG");
             }
         }
-        let sourceIndex = parseInt(sourceID);
-        let targetIndex = parseInt(targetID);
-        if (sourceIndex !== targetIndex) {
-            let sourceSong = store.currentList.songs[sourceIndex];
-            store.currentList.songs.splice(sourceIndex, 1);
-            store.currentList.songs.splice(targetIndex, 0, sourceSong);
-            asyncMoveSong();
-        }
+        let sourceSong = store.currentList.songs[sourceIndex];
+        store.currentList.songs.splice(sourceIndex, 1);
+        store.currentList.songs.splice(targetIndex, 0, sourceSong);
+        asyncMoveSong();
     }
 
     store.showEditSongModal = function (index) {
@@ -505,6 +521,22 @@ export const useGlobalStore = () => {
         storeReducer({
             type: GlobalStoreActionType.UNMARK_SONG_FOR_DELETION,
         });
+    }
+
+    store.deleteSongByIndex = function (index) {
+        async function asyncDeleteSong() {
+            let response = await api.updatePlaylistById(store.currentList._id, store.currentList);
+            if (response.data.success) {
+                storeReducer({
+                    type: GlobalStoreActionType.SET_CURRENT_LIST,
+                    payload: store.currentList
+                });
+            }
+            else {
+                console.log("API FAILED TO DELETE SONG");
+            }
+        }
+        asyncDeleteSong();
     }
 
     // THIS GIVES OUR STORE AND ITS REDUCER TO ANY COMPONENT THAT NEEDS IT
