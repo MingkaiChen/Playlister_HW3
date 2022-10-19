@@ -33,17 +33,12 @@ function EditSongModal(props) {
                 </div>
                 <div class="modal-center">
                     <div class="modal-center-content" id="edit-song-info-div">
-
                         <span id="title-prompt">Title:</span>
                         <input onChange={handleChangeTitle} id="edit-song-modal-title-textfield"></input>
-
                         <span id="artist-prompt">Artist:</span>
                         <input onChange={handleChangeArtist} id="edit-song-modal-artist-textfield"></input>
-
                         <span id="you-tube-id-prompt">YouTubeId:</span>
                         <input onChange={handleChangeYouTubeId} id="edit-song-modal-youTubeId-textfield"></input>
-
-
                     </div>
                 </div>
                 <div class="modal-south">
