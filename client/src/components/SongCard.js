@@ -23,6 +23,11 @@ function SongCard(props) {
         event.preventDefault();
         setDraggedTo(false);
     };
+
+    function handleEdit(event) {
+        store.showEditSongModal(parseInt(event.target.id.substring(event.target.id.indexOf("-") + 1)));
+    }
+
     function handleDrop(event) {
 
         setIsDragging(false);
@@ -49,6 +54,7 @@ function SongCard(props) {
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
+            onDoubleClick={handleEdit}
         >
             {index + 1}.
             <a

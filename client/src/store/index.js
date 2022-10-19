@@ -22,6 +22,8 @@ export const GlobalStoreActionType = {
     UNMARK_LIST_FOR_DELETION: "UNMARK_LIST_FOR_DELETION",
     DELETE_MARKED_LIST: "DELETE_MARKED_LIST",
     CREATE_NEW_SONG: "CREATE_NEW_SONG",
+    MARK_SONG_FOR_EDITING: "MARK_SONG_FOR_EDITING",
+    UNMARK_SONG_FOR_EDITING: "UNMARK_SONG_FOR_EDITING",
 }
 
 // WE'LL NEED THIS TO PROCESS TRANSACTIONS
@@ -53,7 +55,7 @@ export const useGlobalStore = () => {
                     newListCounter: store.newListCounter,
                     listNameActive: false,
                     markListForDeletion: null,
-                    markSongForEditing: store.markSongForEditing,
+                    markSongForEditing: null,
                 });
             }
             // STOP EDITING THE CURRENT LIST
@@ -149,6 +151,28 @@ export const useGlobalStore = () => {
                 return setStore({
                     idNamePairs: store.idNamePairs,
                     currentList: payload,
+                    newListCounter: store.newListCounter,
+                    listNameActive: false,
+                    markListForDeletion: null,
+                    markSongForEditing: null,
+                });
+            }
+            // MARK A SONG FOR EDITING
+            case GlobalStoreActionType.MARK_SONG_FOR_EDITING: {
+                return setStore({
+                    idNamePairs: store.idNamePairs,
+                    currentList: store.currentList,
+                    newListCounter: store.newListCounter,
+                    listNameActive: false,
+                    markListForDeletion: null,
+                    markSongForEditing: payload,
+                });
+            }
+            // UNMARK A SONG FOR EDITING
+            case GlobalStoreActionType.UNMARK_SONG_FOR_EDITING: {
+                return setStore({
+                    idNamePairs: store.idNamePairs,
+                    currentList: store.currentList,
                     newListCounter: store.newListCounter,
                     listNameActive: false,
                     markListForDeletion: null,
@@ -367,8 +391,49 @@ export const useGlobalStore = () => {
             store.currentList.songs.splice(sourceIndex, 1);
             store.currentList.songs.splice(targetIndex, 0, sourceSong);
             asyncMoveSong();
-
         }
+    }
+
+    store.showEditSongModal = function (index) {
+        let markedSong = store.currentList.songs[index];
+        document.getElementById("edit-song-modal-title-textfield").value = markedSong.title;
+        document.getElementById("edit-song-modal-artist-textfield").value = markedSong.artist;
+        document.getElementById("edit-song-modal-youTubeId-textfield").value = markedSong.youTubeId;
+        storeReducer({
+            type: GlobalStoreActionType.MARK_SONG_FOR_EDITING,
+            payload: markedSong
+        });
+    }
+
+    store.unmarkSongForEditing = function () {
+        storeReducer({
+            type: GlobalStoreActionType.UNMARK_SONG_FOR_EDITING,
+        });
+    }
+
+    store.editSong = function (newName, newArtist, newYouTubeId) {
+        async function asyncEditSong() {
+            let response = await api.updatePlaylistById(store.currentList._id, store.currentList);
+            if (response.data.success) {
+                storeReducer({
+                    type: GlobalStoreActionType.SET_CURRENT_LIST,
+                    payload: store.currentList
+                });
+            }
+            else {
+                console.log("API FAILED TO EDIT SONG");
+            }
+        }
+        if (newName !== "" && store.markSongForEditing.title !== newName) {
+            store.markSongForEditing.title = newName;
+        }
+        if (newArtist !== "" && store.markSongForEditing.artist !== newArtist) {
+            store.markSongForEditing.artist = newArtist;
+        }
+        if (newYouTubeId !== "" && store.markSongForEditing.youTubeId !== newYouTubeId) {
+            store.markSongForEditing.youTubeId = newYouTubeId;
+        }
+        asyncEditSong();
     }
 
     // THIS GIVES OUR STORE AND ITS REDUCER TO ANY COMPONENT THAT NEEDS IT

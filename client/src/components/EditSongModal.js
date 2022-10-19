@@ -3,7 +3,6 @@ import { GlobalStoreContext } from '../store'
 
 function EditSongModal(props) {
     const { store } = useContext(GlobalStoreContext);
-    let song = store.markSongForEditing;
     let newName = "";
     let newArtist = "";
     let newYouTubeId = "";
@@ -20,9 +19,7 @@ function EditSongModal(props) {
         store.unmarkSongForEditing();
     };
     let handleConfirm = () => {
-        if(song.title !== newName || song.artist !== newArtist || song.youtubeId !== newYouTubeId) {
-            store.editSong(song._id, newName, newArtist, newYouTubeId);
-        } 
+        store.editSong(newName, newArtist, newYouTubeId);
         store.unmarkSongForEditing();
     };
     return (
@@ -38,13 +35,13 @@ function EditSongModal(props) {
                     <div class="modal-center-content" id="edit-song-info-div">
 
                         <span id="title-prompt">Title:</span>
-                        <input defaultValue={song.title} onChange={handleChangeTitle} id="edit-song-modal-title-textfield"></input>
+                        <input onChange={handleChangeTitle} id="edit-song-modal-title-textfield"></input>
 
                         <span id="artist-prompt">Artist:</span>
-                        <input defaultValue={song.artist} onChange={handleChangeArtist} id="edit-song-modal-artist-textfield"></input>
+                        <input onChange={handleChangeArtist} id="edit-song-modal-artist-textfield"></input>
 
                         <span id="you-tube-id-prompt">YouTubeId:</span>
-                        <input defaultValue={song.youTubeId} onChange={handleChangeYouTubeId} id="edit-song-modal-youTubeId-textfield"></input>
+                        <input onChange={handleChangeYouTubeId} id="edit-song-modal-youTubeId-textfield"></input>
 
 
                     </div>
@@ -65,3 +62,5 @@ function EditSongModal(props) {
         </div>
     );
 }
+
+export default EditSongModal;
