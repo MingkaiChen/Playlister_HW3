@@ -347,6 +347,30 @@ export const useGlobalStore = () => {
         }
     }
 
+    store.moveSong = function (sourceID, targetID) {
+        async function asyncMoveSong() {
+            let response = await api.updatePlaylistById(store.currentList._id, store.currentList);
+            if (response.data.success) {
+                storeReducer({
+                    type: GlobalStoreActionType.SET_CURRENT_LIST,
+                    payload: store.currentList
+                });
+            }
+            else {
+                console.log("API FAILED TO MOVE SONG");
+            }
+        }
+        let sourceIndex = parseInt(sourceID);
+        let targetIndex = parseInt(targetID);
+        if (sourceIndex !== targetIndex) {
+            let sourceSong = store.currentList.songs[sourceIndex];
+            store.currentList.songs.splice(sourceIndex, 1);
+            store.currentList.songs.splice(targetIndex, 0, sourceSong);
+            asyncMoveSong();
+
+        }
+    }
+
     // THIS GIVES OUR STORE AND ITS REDUCER TO ANY COMPONENT THAT NEEDS IT
     return { store, storeReducer };
 }
